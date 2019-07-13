@@ -1,21 +1,27 @@
-use actix_web::{web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{web, HttpResponse, Result};
+use serde::{Deserialize, Serialize};
 
 mod user;
 
 fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
+#[derive(Serialize, Deserialize, Clone)]
+struct MyObj {
+    name: String,
 }
 
-fn index2() -> impl Responder {
-    HttpResponse::Ok().body("Hello world again!")
+fn index(obj: web::Path<MyObj>) -> Result<HttpResponse> {
+    let my_obj = MyObj {
+        name: obj.name.to_string(),
+    };
+    let test = vec![my_obj; 3];
+    Ok(HttpResponse::Ok().json(test))
 }
 
-fn main() {
-    HttpServer::new(|| {
-        App::new()
-            .route("/", web::get().to(index))
-            .route("/again", web::get().to(index2))
-    })
+pub fn main() {
+    use actix_web::{App, HttpServer};
+
+    HttpServer::new(|| App::new().route(r"/a/{name}", web::get().to(index)))
         .bind("127.0.0.1:8088")
         .unwrap()
         .run()
