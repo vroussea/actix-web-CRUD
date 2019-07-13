@@ -6,3 +6,6 @@ edition = "2018"
 
 [dependencies]
 actix-web = "1.0"
+futures = "0.1.26"
+bytes = "0.4.12"
+serde = "1.0.94"
