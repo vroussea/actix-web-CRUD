@@ -1,7 +1,8 @@
-use actix_web::{web, HttpResponse, Result};
+use actix_web::{web, Responder};
+use crate::user::User;
 
-fn get_user(params: Form<MyParams>) -> Result<HttpResponse> {
-
+pub fn get_user(params: web::Form<String>) -> impl Responder {
+    User {id: params.0, github: "yes".to_string()}
 }
 
 /*fn get_all_users(obj: web::Path<MyObj>) -> Result<HttpResponse> {
