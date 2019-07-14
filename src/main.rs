@@ -1,24 +1,7 @@
 use actix_web::{web, HttpResponse, Result};
-use serde::{Deserialize, Serialize};
 
 mod handlers;
-
 mod user;
-
-fn index() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
-#[derive(Serialize, Deserialize, Clone)]
-struct MyObj {
-    name: String,
-}
-
-fn index(obj: web::Path<MyObj>) -> Result<HttpResponse> {
-    let my_obj = MyObj {
-        name: obj.name.to_string(),
-    };
-    let test = vec![my_obj; 3];
-    Ok(HttpResponse::Ok().json(test))
-}
 
 pub fn main() {
     use actix_web::{App, HttpServer};
