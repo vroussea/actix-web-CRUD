@@ -3,8 +3,8 @@ use serde::Serialize;
 
 #[derive(Serialize)]
 pub struct User {
-    id: String,
-    github: String,
+    pub id: String,
+    pub github: String,
 }
 
 impl Responder for User {
