@@ -1,5 +1,7 @@
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 
+mod user;
+
 fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
 }

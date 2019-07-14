@@ -1,3 +1,7 @@
+use actix_web::{Error, HttpRequest, HttpResponse, Responder};
+use serde::Serialize;
+
+#[derive(Serialize)]
 pub struct User {
     id: String,
     github: String,
