@@ -1,6 +1,8 @@
 use actix_web::{web, HttpResponse, Result};
 use serde::{Deserialize, Serialize};
 
+mod handlers;
+
 mod user;
 
 fn index() -> impl Responder {
