@@ -1,6 +1,8 @@
 use actix_web::{web, HttpResponse, Result};
 use serde::{Deserialize, Serialize};
 
+mod handlers;
+
 #[derive(Serialize, Deserialize, Clone)]
 struct MyObj {
     name: String,
