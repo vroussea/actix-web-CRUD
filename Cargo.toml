@@ -1,6 +1,6 @@
 [package]
 name = "rust"
-version = "0.1.0"
+version = "0.1.5"
 authors = ["vroussea <rousseau59>"]
 edition = "2018"
 
@@ -10,3 +10,11 @@ futures = "0.1.26"
 bytes = "0.4.12"
 serde = "1.0.94"
 serde_json = "1.0"
+serde_derive = "1.0"
+#rustbreak = "1.4.0"
+env_logger = "0.6"
+uuid = { version = "0.5", features = ["serde", "v4"] }
+diesel = { version = "^1.1.0", features = ["sqlite", "r2d2"] }
+r2d2 = "0.8"
+dotenv = "0.10"
+libsqlite3-sys = { version = ">=0.8.0, <0.13.0", features = ["bundled"] }

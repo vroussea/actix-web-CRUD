@@ -1,8 +1,15 @@
-use actix_web::{web, Responder};
+use actix_web::{web, Responder, http};
 use crate::user::User;
+use actix_web::HttpRequest;
+use actix_web::HttpResponse;
 
-pub fn get_user(params: web::Form<String>) -> impl Responder {
-    User {id: params.0, github: "yes".to_string()}
+pub fn get_user(request: HttpRequest) -> HttpResponse {
+    let id = match request.match_info().get("id") {
+        Some(id) => id,
+        None => return HttpResponse::BadRequest().into(),
+    };
+    let user = User {id: id.to_string(), username: "user".to_string(), github: Some("yes".to_string())};
+    HttpResponse::Ok().json(user)
 }
 
 /*fn get_all_users(obj: web::Path<MyObj>) -> Result<HttpResponse> {
@@ -11,18 +18,23 @@ pub fn get_user(params: web::Form<String>) -> impl Responder {
     };
     let test = vec![my_obj; 3];
     Ok(HttpResponse::Ok().json(test))
-}
+}*/
 
-fn create_user(obj: web::Path<MyObj>) -> Result<HttpResponse> {
-    let my_obj = MyObj {
-        name: obj.name.to_string(),
+fn create_user(request: HttpRequest) -> HttpResponse {
+    let username = match request.match_info().get("username") {
+        Some(username) => username,
+        None => return HttpResponse::BadRequest().into(),
     };
-    let test = vec![my_obj; 3];
-    Ok(HttpResponse::Ok().json(test))
+    let github = match request.match_info().get("github") {
+        Some(github) => Some(github.to_string()),
+        None => None,
+    };
+    let user = User {id: "1".to_string(), username: username.to_string(), github: github};
+    HttpResponse::Ok().json(user)
 }
 
 
-fn update_user(obj: web::Path<MyObj>) -> Result<HttpResponse> {
+/*fn update_user(obj: web::Path<MyObj>) -> Result<HttpResponse> {
     let my_obj = MyObj {
         name: obj.name.to_string(),
     };
@@ -40,43 +52,65 @@ fn delete_user(obj: web::Path<MyObj>) -> Result<HttpResponse> {
 
 #[cfg(test)]
 mod handlers_tests {
-    use super::*;
-
     mod get_user {
+        use super::super::*;
         use actix_web::dev::Service;
-        use actix_web::{test, web, App};
+        use actix_web::{test, web, App, http};
 
         #[test]
-        fn test_index_get() {
-            let mut app = test::init_service(App::new().route("/", web::get().to(index)));
-            let req = test::TestRequest::get().uri("/").to_request();
-            let resp = test::block_on(app.call(req)).unwrap();
-
-            assert!(resp.status().is_success());
-        }
-
-        #[test]
-        fn test_index_post() {
-            let mut app = test::init_service(App::new().route("/", web::get().to(index)));
-            let req = test::TestRequest::post().uri("/").to_request();
-            let resp = test::block_on(app.call(req)).unwrap();
-
-            assert!(resp.status().is_client_error());
-        }
-
-        #[test]
-        fn test_index_ok() {
-            let req = test::TestRequest::with_header("content-type", "text/plain")
+        fn test_ok() {
+            let req = test::TestRequest::default().param("id", "1234")
                 .to_http_request();
 
-            let resp = test::block_on(index(req)).unwrap();
+            let resp = test::block_on(get_user(req)).unwrap();
             assert_eq!(resp.status(), http::StatusCode::OK);
         }
 
         #[test]
-        fn test_index_not_ok() {
+        fn test_not_ok() {
             let req = test::TestRequest::default().to_http_request();
-            let resp = test::block_on(index(req)).unwrap();
+            let resp = test::block_on(get_user(req)).unwrap();
+            assert_eq!(resp.status(), http::StatusCode::BAD_REQUEST);
+        }
+    }
+
+    mod create_user {
+        use super::super::*;
+        use actix_web::dev::Service;
+        use actix_web::{test, web, App, http};
+
+        /*#[test]
+        fn test_correct_username() {
+            let req = test::TestRequest::default().param("username", "1234")
+                .to_http_request();
+
+            let resp = test::block_on(create_user(req)).unwrap();
+            let result = User::from(test::read_body(resp));
+            assert_eq!(result.username, "1234".to_string());
+        }
+
+        #[test]
+        fn test_has_github() {
+            let req = test::TestRequest::default().param("username", "1234")
+                .to_http_request();
+
+            let resp = test::block_on(create_user(req)).unwrap();
+            assert_eq!(resp.status(), http::StatusCode::OK);
+        }*/
+
+        #[test]
+        fn test_ok() {
+            let req = test::TestRequest::default().param("username", "1234")
+                .to_http_request();
+
+            let resp = test::block_on(create_user(req)).unwrap();
+            assert_eq!(resp.status(), http::StatusCode::OK);
+        }
+
+        #[test]
+        fn test_not_ok() {
+            let req = test::TestRequest::default().to_http_request();
+            let resp = test::block_on(create_user(req)).unwrap();
             assert_eq!(resp.status(), http::StatusCode::BAD_REQUEST);
         }
     }

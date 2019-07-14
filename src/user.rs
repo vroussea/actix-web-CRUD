@@ -4,7 +4,8 @@ use serde::Serialize;
 #[derive(Serialize)]
 pub struct User {
     pub id: String,
-    pub github: String,
+    pub username: String,
+    pub github: Option<String>,
 }
 
 impl Responder for User {
