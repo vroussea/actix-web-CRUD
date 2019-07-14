@@ -1,78 +1,65 @@
-use actix_web::{web, HttpResponse, HttpRequest, Error};
+use crate::database::*;
+use actix_web::{web, Error, HttpResponse};
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
-use futures::{Future};
-use crate::models::User;
-use crate::database;
-use crate::database::create;
+use futures::Future;
 
 type Pool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct MyUser {
-    name: String,
+pub fn get_user(
+    item: web::Json<MyUser>,
+    pool: web::Data<Pool>,
+) -> impl Future<Item = HttpResponse, Error = Error> {
+    web::block(move || query(item.into_inner().name, pool)).then(|res| match res {
+        Ok(user) => Ok(HttpResponse::Ok().json(user)),
+        Err(_) => Ok(HttpResponse::InternalServerError().into()),
+    })
 }
 
-pub fn get_user(request: HttpRequest) -> HttpResponse {
-    let id = match request.match_info().get("id") {
-        Some(id) => id,
-        None => return HttpResponse::BadRequest().into(),
-    };
-    let user = User {id: id.to_string(), name: "user".to_string()};
-    HttpResponse::Ok().json(user)
+pub fn get_users(pool: web::Data<Pool>) -> impl Future<Item = HttpResponse, Error = Error> {
+    web::block(move || query_all(pool)).then(|res| match res {
+        Ok(user) => Ok(HttpResponse::Ok().json(user)),
+        Err(_) => Ok(HttpResponse::InternalServerError().into()),
+    })
 }
-
-/*fn get_all_users(obj: web::Path<MyObj>) -> Result<HttpResponse> {
-    let my_obj = MyObj {
-        name: obj.name.to_string(),
-    };
-    let test = vec![my_obj; 3];
-    Ok(HttpResponse::Ok().json(test))
-}*/
-
-/*fn create_user(request: HttpRequest) -> HttpResponse {
-    let username = match request.match_info().get("username") {
-        Some(username) => username,
-        None => return HttpResponse::BadRequest().into(),
-    };
-    let user = User {id: "1".to_string(), username: username.to_string()};
-    HttpResponse::Ok().json(user)
-}*/
 
 pub fn create_user(
     item: web::Json<MyUser>,
     pool: web::Data<Pool>,
 ) -> impl Future<Item = HttpResponse, Error = Error> {
-    // run diesel blocking code
     web::block(move || create(item.into_inner().name, pool)).then(|res| match res {
         Ok(user) => Ok(HttpResponse::Ok().json(user)),
         Err(_) => Ok(HttpResponse::InternalServerError().into()),
     })
 }
 
-
-/*fn update_user(obj: web::Path<MyObj>) -> Result<HttpResponse> {
-    let my_obj = MyObj {
-        name: obj.name.to_string(),
-    };
-    let test = vec![my_obj; 3];
-    Ok(HttpResponse::Ok().json(test))
+pub fn update_user(
+    item: web::Json<MyUser>,
+    pool: web::Data<Pool>,
+) -> impl Future<Item = HttpResponse, Error = Error> {
+    let clone_item = item.into_inner().clone();
+    web::block(move || update(clone_item.name, clone_item.id, pool)).then(|res| match res {
+        Ok(user) => Ok(HttpResponse::Ok().json(user)),
+        Err(_) => Ok(HttpResponse::InternalServerError().into()),
+    })
 }
 
-fn delete_user(obj: web::Path<MyObj>) -> Result<HttpResponse> {
-    let my_obj = MyObj {
-        name: obj.name.to_string(),
-    };
-    let test = vec![my_obj; 3];
-    Ok(HttpResponse::Ok().json(test))
-}*/
+pub fn delete_user(
+    item: web::Json<MyUser>,
+    pool: web::Data<Pool>,
+) -> impl Future<Item = HttpResponse, Error = Error> {
+    web::block(move || delete(item.into_inner().id, pool)).then(|res| match res {
+        Ok(_) => Ok(HttpResponse::Ok().into()),
+        Err(_) => Ok(HttpResponse::InternalServerError().into()),
+    })
+}
 
 #[cfg(test)]
 mod handlers_tests {
     mod get_user {
         use super::super::*;
         use actix_web::dev::Service;
-        use actix_web::{test, web, App, http};
+        use actix_web::{http, test, web, App};
 
         /*#[test]
         fn test_ok() {
@@ -94,7 +81,7 @@ mod handlers_tests {
     mod create_user {
         use super::super::*;
         use actix_web::dev::Service;
-        use actix_web::{test, web, App, http};
+        use actix_web::{http, test, web, App};
 
         /*#[test]
         fn test_correct_username() {
