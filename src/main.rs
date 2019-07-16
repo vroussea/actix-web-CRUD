@@ -13,10 +13,10 @@ use crate::configure::*;
 mod configure;
 mod database;
 mod handlers;
-mod models;
-mod schema;
-mod requests;
 mod handlers_structs;
+mod models;
+mod requests;
+mod schema;
 
 pub fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=info");

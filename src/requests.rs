@@ -15,10 +15,17 @@ impl fmt::Display for MyError {
 
 impl Error for MyError {}
 
-pub fn get_user_repositories(username: String, password: String) -> Result<String, Box<dyn std::error::Error>> {
+pub fn get_user_repositories(
+    username: String,
+    password: String,
+) -> Result<String, Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
-    let mut res = client.get("https://api.github.com/user/repos")
-        .header("Authorization", "Basic ".to_owned() + &base64::encode(&(username + ":" + &password)))
+    let mut res = client
+        .get("https://api.github.com/user/repos")
+        .header(
+            "Authorization",
+            "Basic ".to_owned() + &base64::encode(&(username + ":" + &password)),
+        )
         .send()?;
     if res.status() == StatusCode::OK {
         Ok(res.text()?)

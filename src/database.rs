@@ -1,12 +1,12 @@
 use super::schema::users::dsl::*;
 use crate::models;
+use crate::models::User;
+use crate::requests::get_user_repositories;
 use actix_web::web;
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
 use diesel::result::Error::AlreadyInTransaction;
 use diesel::result::Error::RollbackTransaction;
-use crate::models::User;
-use crate::requests::get_user_repositories;
 
 type Pool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
 
@@ -48,7 +48,13 @@ pub fn query_all(pool: web::Data<Pool>) -> Result<Vec<models::User>, diesel::res
     Ok(corrected_items)
 }
 
-pub fn create(nm: String, github_nm: String, github_pwd: String, pwd: String, pool: web::Data<Pool>) -> Result<models::User, diesel::result::Error> {
+pub fn create(
+    nm: String,
+    github_nm: String,
+    github_pwd: String,
+    pwd: String,
+    pool: web::Data<Pool>,
+) -> Result<models::User, diesel::result::Error> {
     let uuid = format!("{}", uuid::Uuid::new_v4());
     let new_user = models::NewUser {
         id: &uuid,
@@ -66,7 +72,10 @@ pub fn create(nm: String, github_nm: String, github_pwd: String, pwd: String, po
 }
 
 pub fn update(
-    nm: String, github_nm: String, github_pwd: String, pwd: String,
+    nm: String,
+    github_nm: String,
+    github_pwd: String,
+    pwd: String,
     uuid: String,
     pool: web::Data<Pool>,
 ) -> Result<models::User, diesel::result::Error> {
@@ -81,14 +90,23 @@ pub fn update(
     }
 
     diesel::update(users.filter(id.eq(clone_uuid)))
-        .set((name.eq(nm), github_name.eq(github_nm), github_password.eq(github_pwd), password.eq(pwd)))
+        .set((
+            name.eq(nm),
+            github_name.eq(github_nm),
+            github_password.eq(github_pwd),
+            password.eq(pwd),
+        ))
         .execute(conn)?;
 
     let mut items = users.filter(id.eq(&uuid)).load::<models::User>(conn)?;
     Ok(items.pop().unwrap())
 }
 
-pub fn delete(pwd: String, uuid: String, pool: web::Data<Pool>) -> Result<String, diesel::result::Error> {
+pub fn delete(
+    pwd: String,
+    uuid: String,
+    pool: web::Data<Pool>,
+) -> Result<String, diesel::result::Error> {
     let conn: &SqliteConnection = &pool.get().unwrap();
 
     let clone_uuid = uuid.clone();
@@ -103,7 +121,11 @@ pub fn delete(pwd: String, uuid: String, pool: web::Data<Pool>) -> Result<String
     Ok(uuid)
 }
 
-pub fn get_github_infos(pwd: String, uuid: String, pool: web::Data<Pool>) -> Result<String, diesel::result::Error> {
+pub fn get_github_infos(
+    pwd: String,
+    uuid: String,
+    pool: web::Data<Pool>,
+) -> Result<String, diesel::result::Error> {
     let conn: &SqliteConnection = &pool.get().unwrap();
 
     let item = users.filter(id.eq(&uuid)).load::<models::User>(conn)?;
