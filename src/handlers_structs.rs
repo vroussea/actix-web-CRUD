@@ -25,3 +25,9 @@ pub struct DeleteUserStruct {
     pub id: String,
     pub password: String,
 }
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct GithubInfoStruct {
+    pub id: String,
+    pub password: String,
+}

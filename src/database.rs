@@ -4,7 +4,9 @@ use actix_web::web;
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
 use diesel::result::Error::AlreadyInTransaction;
+use diesel::result::Error::RollbackTransaction;
 use crate::models::User;
+use crate::requests::get_user_repositories;
 
 type Pool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
 
@@ -99,4 +101,22 @@ pub fn delete(pwd: String, uuid: String, pool: web::Data<Pool>) -> Result<String
     diesel::delete(users.filter(id.eq(clone_uuid))).execute(conn)?;
 
     Ok(uuid)
+}
+
+pub fn get_github_infos(pwd: String, uuid: String, pool: web::Data<Pool>) -> Result<String, diesel::result::Error> {
+    let conn: &SqliteConnection = &pool.get().unwrap();
+
+    let item = users.filter(id.eq(&uuid)).load::<models::User>(conn)?;
+
+    if item.len() == 1 && item.get(0).unwrap().password != pwd {
+        return Err(AlreadyInTransaction);
+    }
+
+    let user = item.get(0).unwrap();
+
+    let result = get_user_repositories(user.github_name.clone(), user.github_password.clone());
+    match result {
+        Ok(github) => Ok(github),
+        Err(_) => Err(RollbackTransaction),
+    }
 }

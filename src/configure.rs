@@ -65,7 +65,7 @@ pub fn delete(cfg: &mut web::ServiceConfig) {
     );
 }
 
-/*pub fn get_github(cfg: &mut web::ServiceConfig) {
+pub fn get_github(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::resource("/user/github")
             .data(
@@ -78,4 +78,4 @@ pub fn delete(cfg: &mut web::ServiceConfig) {
             )
             .route(web::get().to_async(get_user_github)),
     );
-}*/
+}

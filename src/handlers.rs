@@ -5,6 +5,7 @@ use diesel::r2d2::{self, ConnectionManager};
 use futures::Future;
 use diesel::result::Error::AlreadyInTransaction;
 use crate::handlers_structs::*;
+use diesel::result::Error::RollbackTransaction;
 
 type Pool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
 
@@ -53,51 +54,21 @@ pub fn delete_user(
 ) -> impl Future<Item = HttpResponse, Error = Error> {
     let clone_item = item.into_inner().clone();
     web::block(move || delete(clone_item.password, clone_item.id, pool)).then(|res| match res {
-        Ok(_) => Ok(HttpResponse::Ok().into()),
+        Ok(response) => Ok(HttpResponse::Ok().content_type("plain/text").body(response)),
         Err(err) => {match err { error::BlockingError::Error(e) => if e == AlreadyInTransaction {Ok(HttpResponse::Unauthorized().into())} else { Ok(HttpResponse::InternalServerError().into()) }, error::BlockingError::Canceled => Ok(HttpResponse::InternalServerError().into()), }},
     })
 }
 
-/*pub fn get_user_github(
-    item: web::Json<MyUser>,
+pub fn get_user_github(
+    item: web::Json<GithubInfoStruct>,
     pool: web::Data<Pool>,
 ) -> impl Future<Item = HttpResponse, Error = Error> {
-    System::new("test").block_on(lazy(|| {
-        awc::Client::new()
-            .get("https://www.rust-lang.org/") // <- Create request builder
-            .header("User-Agent", "Actix-web")
-            .send() // <- Send http request
-            .from_err()
-            .and_then(|mut response| {
-                // <- server http response
-                println!("Response: {:?}", response);
-
-                // read response body
-                response
-            })
-    }));
-
-    /*let sys = actix::System::new("test");
-
-    actix::Arbiter::handle().spawn({
-        client::get("http://www.rust-lang.org")   // <- Create request builder
-            .header("User-Agent", "Actix-web")
-            .finish().unwrap()
-            .send()                               // <- Send http request
-            .map_err(|_| ())
-            .and_then(|response| {                // <- server http response
-                println!("Response: {:?}", response);
-                response
-            })
-    });
-
-    sys.run();*/
-    Ok(HttpResponse::InternalServerError().into())
-    /*web::block(move || query(item.into_inner().name, pool)).then(|res| match res {
-        Ok(user) => Ok(HttpResponse::Ok().json(user)),
-        Err(_) => Ok(HttpResponse::InternalServerError().into()),
-    })*/
-}*/
+    let clone_item = item.into_inner().clone();
+    web::block(move || get_github_infos(clone_item.password, clone_item.id, pool)).then(|res| match res {
+        Ok(response) => Ok(HttpResponse::Ok().content_type("plain/text").body(response)),
+        Err(err) => {match err { error::BlockingError::Error(e) => if e == AlreadyInTransaction || e == RollbackTransaction { Ok(HttpResponse::Unauthorized().into()) } else { Ok(HttpResponse::InternalServerError().into()) }, error::BlockingError::Canceled => Ok(HttpResponse::InternalServerError().into()), }},
+    })
+}
 
 #[cfg(test)]
 mod handlers_tests {

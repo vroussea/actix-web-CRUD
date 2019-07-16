@@ -9,7 +9,6 @@ use diesel::r2d2::{self, ConnectionManager};
 use dotenv;
 
 use crate::configure::*;
-use crate::requests::*;
 
 mod configure;
 mod database;
@@ -24,10 +23,6 @@ pub fn main() -> std::io::Result<()> {
     env_logger::init();
 
     dotenv::dotenv().ok();
-
-    if let Err(e) = get_user_repositories() {
-        println!("something went wrong : {}", e);
-    }
 
     let connspec = std::env::var("DATABASE_URL").expect("DATABASE_URL");
     let manager = ConnectionManager::<SqliteConnection>::new(connspec);
@@ -44,7 +39,7 @@ pub fn main() -> std::io::Result<()> {
             .configure(get_all)
             .configure(update)
             .configure(delete)
-            //.configure(get_github)
+            .configure(get_github)
     })
     .bind("127.0.0.1:8088")?
     .run()
