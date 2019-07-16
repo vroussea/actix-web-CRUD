@@ -64,3 +64,18 @@ pub fn delete(cfg: &mut web::ServiceConfig) {
             .route(web::delete().to_async(delete_user)),
     );
 }
+
+/*pub fn get_github(cfg: &mut web::ServiceConfig) {
+    cfg.service(
+        web::resource("/user/github")
+            .data(
+                web::JsonConfig::default()
+                    .limit(4096)
+                    .error_handler(|err, _| {
+                        error::InternalError::from_response(err, HttpResponse::Conflict().finish())
+                            .into()
+                    }),
+            )
+            .route(web::get().to_async(get_user_github)),
+    );
+}*/

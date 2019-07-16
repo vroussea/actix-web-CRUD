@@ -1,4 +1,7 @@
 CREATE TABLE users (
   id VARCHAR NOT NULL PRIMARY KEY,
-  name VARCHAR NOT NULL
+  name VARCHAR NOT NULL,
+  github_name VARCHAR NOT NULL,
+  github_password VARCHAR NOT NULL,
+  password VARCHAR NOT NULL
 )
